@@ -1,0 +1,5 @@
+#include <GLFW/glfw3.h>
+#include <glad/glad.h> 
+
+
+-lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
