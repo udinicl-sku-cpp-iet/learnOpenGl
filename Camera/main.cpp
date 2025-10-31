@@ -13,6 +13,13 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#ifdef DEBUG
+// ImGui Headers
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#endif
+
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -101,13 +108,24 @@ int main(void){
 #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-  
-  
+
   GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
   assert(window!=NULL);
   glfwMakeContextCurrent(window);
   assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  
+#ifdef DEBUG
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+  ImGui_ImplOpenGL3_Init();
+#endif
+  
 
   //--------------SHADER
   Shader shader("./shader.vs","shader.fs");
@@ -209,6 +227,13 @@ int main(void){
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 
+#ifdef DEBUG
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow(); 
+#endif
+
    
     //model = glm::rotate(model, glm::radians(5.0f), glm::vec3(0.2f, 0.2f, 0.2f));
 
@@ -245,8 +270,14 @@ int main(void){
 
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    
 
+#ifdef DEBUG
+    // Rendering
+    // (Your code clears your framebuffer, renders your other stuff etc.)
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // (Your code calls glfwSwapBuffers() etc.)
+#endif
   
     glfwSwapBuffers(window);    
     glfwPollEvents();
@@ -254,6 +285,18 @@ int main(void){
   }
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers     (1, &VBO);
+  glDeleteTextures(1, &textureContainer);
+  glDeleteTextures(1, &textureSmile);
+
+  if (shader.ID != 0) { // Controlla se l'ID è valido prima di cancellare
+      glDeleteProgram(shader.ID);
+  }
+#ifdef DEBUG
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+#endif
+
   glfwTerminate();
 }
 
@@ -314,5 +357,6 @@ void processInput(GLFWwindow *window){
 
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+  (void)window; //for warning
   glViewport(0, 0, width, height);
 }  
