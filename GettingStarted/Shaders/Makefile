@@ -21,8 +21,6 @@ IMGUI_SRCS = \
 ../../imgui/imgui_demo.cpp \
 ../../imgui/backends/imgui_impl_glfw.cpp \
 ../../imgui/backends/imgui_impl_opengl3.cpp
-
-
 IMGUI_OBJ_DIR = ../../imgui/obj
 IMGUI_OBJS = $(patsubst %.cpp,$(IMGUI_OBJ_DIR)/%.o,$(notdir $(IMGUI_SRCS)))
 IMGUI_SRC_DIRS = $(sort $(dir $(IMGUI_SRCS)))
