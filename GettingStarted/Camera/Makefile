@@ -25,14 +25,6 @@ ifeq ($(MODE),standard)
 	CXXFLAGS += -DSTANDARD
 	TARGET = main
 	MAIN_OBJ_NAME = main.o
-else ifeq ($(MODE),ex1)
-	CXXFLAGS += -DEX1
-	TARGET = main_ex1
-	MAIN_OBJ_NAME = main_ex1.o
-else ifeq ($(MODE),ex2)
-	CXXFLAGS += -DEX2
-	TARGET = main_ex2
-	MAIN_OBJ_NAME = main_ex2.o
 else
 	$(error Invalid MODE: '$(MODE)'. Use MODE=debug or MODE=release)
 endif
@@ -71,7 +63,7 @@ run: $(TARGET)
 
 clean:
 	@echo "Cleaning up..."
-	$(RM) main main_ex1 main_ex2 
+	$(RM) main 
 	$(RM) $(OBJ_DIR)
 	$(RM) $(GLAD_OBJ_DIR)
 	$(RM) *~

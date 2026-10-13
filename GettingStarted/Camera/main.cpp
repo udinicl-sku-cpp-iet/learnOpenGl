@@ -22,9 +22,10 @@ void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+GLFWwindow *glfwInitWindow(const char *name);
 
 
-float vertices[] = {
+float     vertices[] =      {
   //vertices              //texture coord
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -68,7 +69,6 @@ float vertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
-
 glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
     glm::vec3( 2.0f,  5.0f, -15.0f), 
@@ -89,36 +89,18 @@ float lastFrame = 0.0f; // Time of last frame
 
 float lastX = SCR_WIDTH/2, lastY = SCR_HEIGHT/2;
 bool firstMouse = true;
+
 //--CAMERA
 Camera camera(glm::vec3(0,0,3));
 
 int main(void){
-
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glfwSetCursorPosCallback(window, mouse_callback);
-  glfwSetScrollCallback(window, scroll_callback); 
-  glEnable(GL_DEPTH_TEST);
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
 
   //---LOAD TEXTURE----
   unsigned int texture[2];
-  glGenTextures(2, texture);
-  
+  glGenTextures(2, texture);  
   int width, height, nrChannels;
-  unsigned char *data;
-  
+  unsigned char *data;  
   data = stbi_load("./textures/container.jpg", &width, &height, &nrChannels, 0);
   assert(data);
   glActiveTexture(GL_TEXTURE0);
@@ -135,14 +117,10 @@ int main(void){
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
-
-
   //---VAO,VBO INITIALIZATION
   unsigned int VAO,VBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers     (1, &VBO);
-
-  
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER,         VBO);
 
@@ -179,7 +157,7 @@ int main(void){
       glm::mat4 projection;
       
       model = glm::translate(model, cubePositions[i]);
-      model = glm::rotate(model,  (float)glfwGetTime() * glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+      //model = glm::rotate(model,  (float)glfwGetTime() * glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             
       view = camera.GetViewMatrix();
       
@@ -220,7 +198,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   (void)window;//warning
   glViewport(0, 0, width, height);
 }  
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
   (void)window;//warning
   if (firstMouse){
@@ -233,10 +210,32 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
   lastX = xpos;
   lastY = ypos;
 
-  camera.ProcessMouseMovement(xoffset, yoffset);
+  camera.ProcessMouseMovement(xoffset, yoffset, true);
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
   (void)window;
-  (void)xoffset;
-  camera.ProcessMouseScroll(yoffset);
+  camera.ProcessMouseScroll(yoffset, xoffset);
+}
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback); 
+  glEnable(GL_DEPTH_TEST);
+
+  return window;
 }

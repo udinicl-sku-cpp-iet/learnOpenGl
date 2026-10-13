@@ -25,6 +25,15 @@ const unsigned int SCR_HEIGHT = 600;
 
 void processInput(GLFWwindow *window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+GLFWwindow *glfwInitWindow(const char *name);
+#ifdef EX1
+void ImGui_Init(GLFWwindow *window, const char *glsl_version);
+void ImGui_Update(float *fov, float *aspect_ratio, float *view_x, float *view_y, float *view_z, float *rotation_x, float *rotation_y, float *rotation_z);
+void ImGui_Render();
+void ImGui_Cleanup();
+#endif
+
+
 
 
 float vertices[] = {
@@ -71,7 +80,6 @@ float vertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
-
 glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
     glm::vec3( 2.0f,  5.0f, -15.0f), 
@@ -88,35 +96,20 @@ glm::vec3 cubePositions[] = {
 
 int main(void){
 
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  glEnable(GL_DEPTH_TEST);
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
 
 #ifdef EX1
-  //-------------IMGUI
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 330 core");
-    
+  ImGui_Init(window,"#version 330 core");
+
   float fov          = 45.0f;
   float aspect_ratio = static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT);
 
   float view_x       =  0.0f;
   float view_y       =  0.0f;
   float view_z       = -3.0f;
-  //--------------------
+  float x_rotation   =  0.0f;
+  float y_rotation   =  0.0f;
+  float z_rotation   =  0.0f;
 #endif
   //---LOAD TEXTURE----
   unsigned int texture[2];
@@ -167,21 +160,7 @@ int main(void){
   
   while(!glfwWindowShouldClose(window)){
 #ifdef EX1
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    // 1. Finestra e Slider
-    ImGui::Begin("Settings");
-    ImGui::SliderFloat("Fov",          &fov         , 20.0f, 70.0f);
-    ImGui::SliderFloat("Aspect Ratio", &aspect_ratio,
-		       (static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT))-2.0f,
-		       (static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT))+2.0f);
-
-    ImGui::SliderFloat("View pos_x"  , &view_x, -10.0f, 10.0f);
-    ImGui::SliderFloat("View pos_y"  , &view_y, -10.0f, 10.0f);
-    ImGui::SliderFloat("View pos_z"  , &view_z, -10.0f, 10.0f);
-    ImGui::End();
+    ImGui_Update(&fov, &aspect_ratio, &view_x, &view_y, &view_z,  &x_rotation, &y_rotation, &z_rotation);
 #endif
   
     processInput(window);
@@ -204,10 +183,13 @@ int main(void){
       model = glm::rotate(model,  (float)glfwGetTime() * glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 #ifdef EX1
-      view  = glm::translate(view, glm::vec3(view_x, view_y, view_z));
+      view  =      glm::rotate(view, x_rotation, glm::vec3(1.0f, 0.0f, 0.0f));
+      view  =      glm::rotate(view, y_rotation, glm::vec3(0.0f, 1.0f, 0.0f));
+      view  =      glm::rotate(view, z_rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+      view  =      glm::translate(view, glm::vec3(view_x, view_y, view_z));      
       projection = glm::perspective(glm::radians(fov), aspect_ratio, 0.1f, 100.0f);
 #else
-      view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+      view  =      glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
       projection = glm::perspective(glm::radians(45.0f),
 				    (static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT))
 				    , 0.1f, 100.0f);
@@ -220,17 +202,14 @@ int main(void){
     }
     //----------------------    
 #ifdef EX1
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_Render();
 #endif
     glfwSwapBuffers(window);    
     glfwPollEvents();
     
   }
 #ifdef EX1
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+  ImGui_Cleanup();
 #endif
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers     (1, &VBO);
@@ -249,3 +228,64 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   (void)window;//warning
   glViewport(0, 0, width, height);
 }  
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glEnable(GL_DEPTH_TEST);
+
+  return window;
+}
+#ifdef EX1
+void ImGui_Init(GLFWwindow *window, const char *glsl_version) {
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io; 
+    
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init(glsl_version);
+
+}
+void ImGui_Update(float *fov, float *aspect_ratio, float *view_x, float *view_y, float *view_z, float *rotation_x, float *rotation_y, float *rotation_z) {
+  
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  // 1. Finestra e Slider
+  ImGui::Begin("Settings");
+  ImGui::SliderFloat("Fov",          fov         , 10.0f, 80.0f);
+  ImGui::SliderFloat("Aspect Ratio", aspect_ratio,
+		     (static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT))-2.0f,
+		     (static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT))+2.0f);
+
+  ImGui::SliderFloat("View pos_x"  , view_x, -10.0f, 10.0f);
+  ImGui::SliderFloat("View pos_y"  , view_y, -10.0f, 10.0f);
+  ImGui::SliderFloat("View pos_z"  , view_z, -10.0f, 10.0f);
+  ImGui::SliderFloat("View rotation_x"  , rotation_x, -10.0f, 10.0f);
+  ImGui::SliderFloat("View rotation_y"  , rotation_y, -10.0f, 10.0f);
+  ImGui::SliderFloat("View rotation_z"  , rotation_z, -10.0f, 10.0f);
+  ImGui::End();
+}
+void ImGui_Render() {
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+void ImGui_Cleanup() {
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+}
+#endif

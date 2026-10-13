@@ -18,43 +18,31 @@ const unsigned int SCR_HEIGHT = 600;
 float triangleVertices[] = {
   // positions         // colors
   0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-  -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+ -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
   0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 }; 
 
 
 
-void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void        processInput(GLFWwindow *window);
+void        framebuffer_size_callback(GLFWwindow* window, int width, int height);
+GLFWwindow *glfwInitWindow(const char *name);
+#ifdef EX2
+void ImGui_Init(GLFWwindow *window, const char *glsl_version);
+void ImGui_Update(float *offsetX, float *offsetY);
+void ImGui_Render();
+void ImGui_Cleanup();
+#endif
 
 
 
 int main(void){   
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
   
-  
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
 #ifdef EX2
-  //-------------IMGUI
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 330 core");
-    
+  ImGui_Init(window,"#version 330 core");
   float currentOffset_x = 0.0f;
   float currentOffset_y= 0.0f;
-  //--------------------
 #endif
 
   //--------------SHADER
@@ -106,15 +94,7 @@ int main(void){
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);uncomment for wireframe
   while(!glfwWindowShouldClose(window)){
 #ifdef EX2
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    // 1. Finestra e Slider
-    ImGui::Begin("Offset Control");
-    ImGui::SliderFloat("X Position", &currentOffset_x, -0.5f, 0.5f);
-    ImGui::SliderFloat("Y Position", &currentOffset_y, -0.5f, 0.5f);
-    ImGui::End();
+    ImGui_Update(&currentOffset_x,  &currentOffset_y);
 #endif
         // -----------------------------
     // input
@@ -133,8 +113,7 @@ int main(void){
     glDrawArrays(GL_TRIANGLES, 0, 3);
     
 #ifdef EX2
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_Render();
 #endif
   
     glfwSwapBuffers(window);    
@@ -142,9 +121,7 @@ int main(void){
     
   }
 #ifdef EX2
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+  ImGui_Cleanup();
 #endif
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers     (1, &VBO);
@@ -159,4 +136,52 @@ void processInput(GLFWwindow *window){
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   (void)window;
   glViewport(0, 0, width, height);
-}  
+}
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  return window;
+}
+#ifdef EX2
+void ImGui_Init(GLFWwindow *window, const char *glsl_version) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io; 
+    
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+}
+void ImGui_Update(float *offsetX, float *offsetY) {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Offset Control");
+    ImGui::SliderFloat("X Position", offsetX, -0.5f, 0.5f);
+    ImGui::SliderFloat("Y Position", offsetY, -0.5f, 0.5f);
+    ImGui::End();
+}
+void ImGui_Render() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+void ImGui_Cleanup() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+#endif

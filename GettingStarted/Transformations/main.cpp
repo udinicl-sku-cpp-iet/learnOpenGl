@@ -17,8 +17,9 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void        processInput(GLFWwindow *window);
+void        framebuffer_size_callback(GLFWwindow* window, int width, int height);
+GLFWwindow *glfwInitWindow(char const* name);
 
 
 float vertices[] = {
@@ -36,20 +37,7 @@ unsigned int rectangleIndices[] = {  // note that we start from 0!
 
 int main(void){
 
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
 
   //---LOAD TEXTURE----
   unsigned int texture[2];
@@ -71,7 +59,7 @@ int main(void){
   assert(data);
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texture[1]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
   stbi_image_free(data);
 
@@ -127,8 +115,7 @@ int main(void){
 #ifdef EX2
     trans = glm::mat4(1.0f);
     trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-    trans = glm::scale(trans, glm::vec3(sin(glfwGetTime()),//*** sin(glfwGetTime())***//
-					1,1) );
+    trans = glm::scale(trans,glm::vec3(1,sin(glfwGetTime()),1) );
     shader.setMat4("transform",trans);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 #endif
@@ -141,13 +128,31 @@ int main(void){
 }
 
 
-void processInput(GLFWwindow *window){
+void        processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
     glfwSetWindowShouldClose(window, true);
   }
-
 }
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+void        framebuffer_size_callback(GLFWwindow* window, int width, int height){
   (void)window;//warning
   glViewport(0, 0, width, height);
 }  
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  return window;
+}

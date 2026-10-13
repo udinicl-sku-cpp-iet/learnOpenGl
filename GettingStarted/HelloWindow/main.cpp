@@ -9,26 +9,13 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
-
+void        framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void        processInput(GLFWwindow *window);
+GLFWwindow *glfwInitWindow(const char *name);
 
 int main(void){   
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
   
-  
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
   while(!glfwWindowShouldClose(window)){
     processInput(window);
     
@@ -50,4 +37,25 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 void processInput(GLFWwindow *window){
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+}
+
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  return window;
 }

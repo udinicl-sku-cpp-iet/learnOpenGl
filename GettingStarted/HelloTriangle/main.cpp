@@ -65,31 +65,19 @@ const char *fragmentShaderSource2= "#version 330 core                           
                                    "out vec4 FragColor;                                                       \n"
                                    "uniform vec4 aColor;                                                      \n"
                                    "void main(){                                                              \n"
-                                   "  FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);                               \n"
+                                   "  FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);                               \n"
                                    "}                                                                         \0";
 #endif
 
 
-void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void        processInput(GLFWwindow *window);
+void        framebuffer_size_callback(GLFWwindow* window, int width, int height);
+GLFWwindow *glfwInitWindow(const char *name);
 
 
 
 int main(void){   
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-  
-  
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,"LearnOpenGL", NULL, NULL);
-  assert(window!=NULL);
-  glfwMakeContextCurrent(window);
-  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  GLFWwindow* window = glfwInitWindow("LearnOpenGL");
 
   //--------------SHADER
   int success;
@@ -226,12 +214,12 @@ int main(void){
 
    
 
-    GLint desired_mode = (fmod(glfwGetTime(), 2.0) < 1.0) ? GL_FILL : GL_LINE;        
+    //GLint desired_mode = (fmod(glfwGetTime(), 2.0) < 1.0) ? GL_FILL : GL_LINE;        
     GLint modes[2];
     glGetIntegerv(GL_POLYGON_MODE, modes);
-    if (modes[0] != desired_mode) {
-      glPolygonMode(GL_FRONT_AND_BACK, desired_mode);
-    }
+    //if (modes[0] != desired_mode) {
+    //glPolygonMode(GL_FRONT_AND_BACK, desired_mode);
+    //}
     
     glUseProgram(shaderProgram);
 #if defined(STANDARD) || defined(EX1)
@@ -286,4 +274,24 @@ void processInput(GLFWwindow *window){
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
   (void)window;//warning
   glViewport(0, 0, width, height);
-}  
+}
+GLFWwindow *glfwInitWindow(const char *name){
+  
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+  
+  
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH,SCR_HEIGHT,name, NULL, NULL);
+  assert(window!=NULL);
+  glfwMakeContextCurrent(window);
+  assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+  return window;
+}
+
